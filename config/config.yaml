@@ -1,0 +1,114 @@
+# Jarvis – zentrale Konfiguration. Pfade sind relativ zum Projektordner.
+# Geheimnisse (API-Schlüssel) gehören NICHT hierher, sondern in .env bzw. Umgebungsvariablen.
+
+general:
+  assistant_name: "Jarvis"
+  language: "de"
+  # handsfree: dauerhaft zuhören, "Jarvis, ..." sagen (wie Alexa) | push_to_talk | text
+  activation_mode: "handsfree"
+  speak_replies: true
+
+ai:
+  # Aktiver Provider. Ein Wechsel erfolgt NUR hier – es gibt keinen stillen Fallback.
+  provider: "ollama"
+  providers:
+    ollama:
+      enabled: true
+      base_url: "http://localhost:11434"
+      # Anpassbar. Für 16 GB VRAM sind 7-8B-Modelle (Q4) flott.
+      model: "gemma4:e2b"
+      timeout_s: 120
+      options:
+        temperature: 0.6
+        num_ctx: 4096
+    # Weitere Provider sind vorbereitet; openai_compatible ist implementiert.
+    openai:
+      enabled: false
+      model: ""
+      api_key_env: "OPENAI_API_KEY"
+    anthropic:
+      enabled: false
+      model: ""
+      api_key_env: "ANTHROPIC_API_KEY"
+    gemini:
+      enabled: false
+      model: ""
+      api_key_env: "GEMINI_API_KEY"
+    openai_compatible:
+      enabled: false
+      base_url: "https://api.openai.com/v1"
+      model: "gpt-4o-mini"
+      api_key_env: "OPENAI_COMPATIBLE_API_KEY"
+
+stt:
+  engine: "faster-whisper"
+  model: "small"          # tiny | base | small | medium | large-v3 ...
+  device: "cpu"           # faster-whisper nutzt unter Windows keine AMD-GPU
+  compute_type: "int8"
+  language: "de"
+  beam_size: 5
+  model_dir: "models/stt" # Modelle werden beim ersten Gebrauch hierhin geladen
+
+tts:
+  engine: "piper"
+  voice: "de_DE-thorsten-high"
+  model_dir: "models/tts"
+  speed: 0.95             # 1.0 = Standard, <1 langsamer
+  volume: 1.0
+  sentence_pause_s: 0.2
+
+wake_word:
+  enabled: true
+  engine: "whisper"        # erkennt das konfigurierte Wort „Jarvis“ im lokalen STT-Transkript
+  model_dir: "models/wake_word"
+  phrase: "jarvis"
+  variants: []             # weitere Schreibweisen, falls Whisper "Jarvis" anders schreibt
+  match_threshold: 0.75    # Ähnlichkeit (0.5-1.0); höher = strenger
+  followup_window_s: 8     # so lange ohne "Jarvis" weitersprechen; 0 = aus
+  ack_phrase: "Ja?"        # Bestätigung bei nur "Jarvis"; leer = Signalton
+  listen_timeout_s: 6      # so lange wartet Jarvis danach auf deinen Befehl
+
+audio:
+  input_device: null      # null = Systemstandard; sonst Index oder Name (siehe /devices)
+  output_device: null
+  sample_rate: 16000
+  silence_threshold: 0.012
+  silence_duration_s: 0.8   # Stille am Satzende, bevor die Äußerung als beendet gilt
+  max_record_s: 30
+  calibrate_noise: true     # beim Start Hintergrundrauschen messen (1 s still sein)
+  post_speech_pause_s: 0.5  # Pause nach Jarvis' Antwort, bevor wieder zugehört wird
+
+conversation:
+  max_messages: 20
+  session_name: "default"
+  persist: false          # true = Verlauf lokal in SQLite speichern
+
+memory:
+  engine: "sqlite"        # lokale Faktenablage für remember_fact/search_memory/forget_memory
+  path: "data/memory.db"
+
+plugins:
+  directory: "plugins"
+  enabled: ["example", "homeassistant", "system_monitor", "docker_proxmox"]
+  settings:
+    example:
+      max_sides: 500
+    homeassistant:
+      base_url: "https://ha.home.lan"
+      token_env: "HOME_ASSISTANT_TOKEN"
+    docker_proxmox:
+      docker_command: "docker"
+      proxmox_url: ""
+      proxmox_token_env: "PROXMOX_API_TOKEN"
+
+tools:
+  enabled: true
+  max_tool_rounds: 4
+  timeout_s: 30
+  disabled: []
+
+logging:
+  level: "INFO"
+  file: "logs/jarvis.log"
+  json: false
+  console: false

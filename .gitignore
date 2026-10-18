@@ -1,0 +1,16 @@
+.env
+.idea/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Laufzeitdaten
+data/
+logs/
+models/
